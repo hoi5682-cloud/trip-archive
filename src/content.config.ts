@@ -11,6 +11,7 @@ const trips = defineCollection({
     endDate: z.coerce.date().optional(),
     summary: z.string(),
     emoji: z.string().default("✈️"),
+    cover: z.string().optional(),
     budget: z.string().optional(),
     tags: z.array(z.string()).default([]),
   }),

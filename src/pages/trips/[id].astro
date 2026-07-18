@@ -28,6 +28,15 @@ const dateRange = (start?: Date, end?: Date) => {
 
 <Layout title={trip.data.title} description={trip.data.summary}>
   <a class="back-link" href={import.meta.env.BASE_URL}>&larr; 전체 여행으로</a>
+  {
+    trip.data.cover && (
+      <img
+        class="hero-cover"
+        src={`${import.meta.env.BASE_URL}covers/${trip.data.cover}`}
+        alt={`${trip.data.destination} 일러스트`}
+      />
+    )
+  }
   <h1>{trip.data.emoji} {trip.data.title}</h1>
   <p class="card-meta">
     <span class={`badge ${badgeClass}`}>{statusLabel}</span>
@@ -59,3 +68,15 @@ const dateRange = (start?: Date, end?: Date) => {
     <Content />
   </article>
 </Layout>
+
+<style>
+  .hero-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    margin-top: 12px;
+    display: block;
+  }
+</style>

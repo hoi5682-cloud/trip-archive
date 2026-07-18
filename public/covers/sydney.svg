@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="시드니 오페라하우스와 하버브릿지 일러스트">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF8A5C" />
+      <stop offset="55%" stop-color="#FFB27A" />
+      <stop offset="100%" stop-color="#FFD9A0" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A6B78" />
+      <stop offset="100%" stop-color="#1C3540" />
+    </linearGradient>
+    <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="100%" stop-color="#EDE2CE" />
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="400" height="300" fill="url(#sky)" />
+  <rect x="0" y="188" width="400" height="112" fill="url(#water)" />
+
+  <!-- sun -->
+  <circle cx="330" cy="70" r="26" fill="#FFE9C7" opacity="0.85" />
+
+  <!-- harbour bridge -->
+  <g stroke="#20242B" fill="none" stroke-linecap="round">
+    <path d="M14,190 C14,96 176,96 176,190" stroke-width="9" />
+    <path d="M14,175 L176,175" stroke-width="4" />
+    <path d="M40,190 L40,150" stroke-width="4" />
+    <path d="M70,190 L70,132" stroke-width="4" />
+    <path d="M100,190 L100,122" stroke-width="4" />
+    <path d="M130,190 L130,132" stroke-width="4" />
+    <path d="M160,190 L160,150" stroke-width="4" />
+  </g>
+  <rect x="8" y="188" width="14" height="42" fill="#20242B" />
+  <rect x="170" y="188" width="14" height="42" fill="#20242B" />
+
+  <!-- opera house podium -->
+  <rect x="216" y="196" width="150" height="18" rx="2" fill="#D8CBAE" />
+
+  <!-- opera house shells -->
+  <g fill="url(#shell)" stroke="#E4D6BC" stroke-width="1">
+    <path d="M232,196 C232,150 244,116 258,104 C266,118 264,160 260,196 Z" />
+    <path d="M256,196 C256,142 270,104 288,90 C298,106 294,154 288,196 Z" />
+    <path d="M284,196 C284,148 300,112 320,100 C328,116 324,158 316,196 Z" />
+    <path d="M312,196 C312,158 324,130 338,120 C344,134 340,166 334,196 Z" />
+  </g>
+
+  <!-- water reflection -->
+  <g stroke="#FFD9A0" stroke-width="2" opacity="0.35" fill="none">
+    <path d="M0,214 Q40,208 80,214 T160,214 T240,214 T320,214 T400,214" />
+    <path d="M0,236 Q40,230 80,236 T160,236 T240,236 T320,236 T400,236" />
+  </g>
+
+  <!-- birds -->
+  <g stroke="#20242B" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7">
+    <path d="M60,50 q8,-8 16,0 q8,-8 16,0" />
+    <path d="M100,66 q6,-6 12,0 q6,-6 12,0" />
+  </g>
+</svg>

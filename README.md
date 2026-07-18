@@ -13,6 +13,7 @@ destination: 목적지
 status: upcoming # upcoming(확정) | candidate(후보) | done(다녀옴)
 summary: 한 줄 요약
 emoji: 🗼
+cover: 파일명.svg # 선택. public/covers/에 넣어둔 일러스트 파일명만 적기
 tags: [태그1, 태그2]
 ---
 
@@ -29,6 +30,7 @@ tags: [태그1, 태그2]
 
 - `가볼곳 후보` / `먹을곳 후보`: 계획 단계에서 담아두는 리스트. 동선에 반영했으면 항목 옆에 `(동선 반영)`이라고 적어두면 구분하기 쉬움
 - `후기`: `status: done`으로 바꾼 뒤 사진과 글을 남기는 섹션. 사진은 `public/photos/[여행-파일명]/`에 넣고 `![설명](/trip-archive/photos/여행-파일명/파일명.jpg)`로 삽입 (BASE_URL이 `/trip-archive/`이므로 앞에 꼭 붙일 것)
+- `cover`: 카드/상세 페이지 상단에 쓰이는 여행지 일러스트. 실제 사진 대신 목적지를 상징하는 SVG를 `public/covers/`에 넣고 파일명만 적어두면 됨 (예: 시드니는 `sydney.svg` — 오페라하우스·하버브릿지 일러스트). 지정 안 하면 이모지+그라디언트로 대체
 
 ## 체크리스트 추가하기
 

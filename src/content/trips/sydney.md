@@ -4,6 +4,7 @@ destination: 호주 시드니
 status: upcoming
 summary: 18개월 아기와 함께 떠나는 첫 가족 여행. 날짜와 세부 일정은 협의 중.
 emoji: 🐨
+cover: sydney.svg
 tags: [아기동반, 첫가족여행]
 ---
 
