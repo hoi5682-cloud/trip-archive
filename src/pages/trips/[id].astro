@@ -16,7 +16,8 @@ const { Content } = await render(trip);
 const allChecklists = await getCollection("checklists");
 const checklists = allChecklists.filter((c) => c.data.trip.id === trip.id);
 
-const statusLabel = { upcoming: "예정", candidate: "후보", done: "다녀옴" }[trip.data.status];
+const statusLabel = { upcoming: "확정", candidate: "후보", done: "다녀옴" }[trip.data.status];
+const badgeClass = { upcoming: "badge-upcoming", candidate: "badge-candidate", done: "badge-done" }[trip.data.status];
 
 const dateRange = (start?: Date, end?: Date) => {
   if (!start) return null;
@@ -29,7 +30,8 @@ const dateRange = (start?: Date, end?: Date) => {
   <a class="back-link" href={import.meta.env.BASE_URL}>&larr; 전체 여행으로</a>
   <h1>{trip.data.emoji} {trip.data.title}</h1>
   <p class="card-meta">
-    [{statusLabel}] {trip.data.destination}
+    <span class={`badge ${badgeClass}`}>{statusLabel}</span>
+    {" "}{trip.data.destination}
     {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
     {trip.data.budget && ` · ${trip.data.budget}`}
   </p>

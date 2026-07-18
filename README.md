@@ -10,7 +10,7 @@
 ---
 title: 여행 이름
 destination: 목적지
-status: upcoming # upcoming(예정) | candidate(후보) | done(다녀옴)
+status: upcoming # upcoming(확정) | candidate(후보) | done(다녀옴)
 summary: 한 줄 요약
 emoji: 🗼
 tags: [태그1, 태그2]
@@ -18,11 +18,17 @@ tags: [태그1, 태그2]
 
 ## 항공 · 숙소
 ## 동선 / 일정
+## 가볼곳 후보
+## 먹을곳 후보
 ## 예산
 ## 메모
+## 후기
 ```
 
 `startDate`, `endDate`(YYYY-MM-DD), `budget`은 선택 항목.
+
+- `가볼곳 후보` / `먹을곳 후보`: 계획 단계에서 담아두는 리스트. 동선에 반영했으면 항목 옆에 `(동선 반영)`이라고 적어두면 구분하기 쉬움
+- `후기`: `status: done`으로 바꾼 뒤 사진과 글을 남기는 섹션. 사진은 `public/photos/[여행-파일명]/`에 넣고 `![설명](/trip-archive/photos/여행-파일명/파일명.jpg)`로 삽입 (BASE_URL이 `/trip-archive/`이므로 앞에 꼭 붙일 것)
 
 ## 체크리스트 추가하기
 

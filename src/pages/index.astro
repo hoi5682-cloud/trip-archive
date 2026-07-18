@@ -14,9 +14,9 @@ const byStatus = (status: "upcoming" | "candidate" | "done") =>
     });
 
 const sections = [
-  { status: "upcoming" as const, label: "예정 여행", empty: "아직 계획 중인 여행이 없어요." },
-  { status: "candidate" as const, label: "후보 여행", empty: "검토 중인 여행지가 없어요." },
-  { status: "done" as const, label: "다녀온 기록", empty: "아직 기록된 여행이 없어요." },
+  { status: "upcoming" as const, label: "확정된 여행", empty: "아직 확정된 여행이 없어요.", className: "section-upcoming", badge: "badge-upcoming", badgeLabel: "확정" },
+  { status: "candidate" as const, label: "가볼까 하는 곳", empty: "검토 중인 여행지가 없어요.", className: "section-candidate", badge: "badge-candidate", badgeLabel: "후보" },
+  { status: "done" as const, label: "지난 여행", empty: "아직 기록된 여행이 없어요.", className: "section-done", badge: "badge-done", badgeLabel: "다녀옴" },
 ];
 
 const dateRange = (start?: Date, end?: Date) => {
@@ -24,39 +24,199 @@ const dateRange = (start?: Date, end?: Date) => {
   const fmt = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
   return end ? `${fmt(start)} - ${fmt(end)}` : fmt(start);
 };
+
+const destinationCount = new Set(trips.map((t) => t.data.destination)).size;
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const nextUpcoming = byStatus("upcoming").find((t) => t.data.startDate && t.data.startDate.getTime() >= today.getTime());
+const dDay = nextUpcoming?.data.startDate
+  ? Math.ceil((nextUpcoming.data.startDate.getTime() - today.getTime()) / 86400000)
+  : null;
 ---
 
 <Layout title="홈">
-  <h1>우리 여행 이야기</h1>
-  <p class="tagline">계획하고, 다니고, 기록하는 우리 둘의 스크랩북 ✂️</p>
+  <h1>이번엔, 어디로 떠날까</h1>
+  <p class="tagline">계획하고, 다니고, 기록하는 우리 가족의 여행 아카이브</p>
 
-  {
-    sections.map(({ status, label, empty }) => {
-      const list = byStatus(status);
-      return (
-        <section>
-          <h2>{label}</h2>
-          {list.length === 0 && <p class="empty">{empty}</p>}
-          {list.map((trip) => (
-            <a class="card" href={`${import.meta.env.BASE_URL}trips/${trip.id}/`}>
-              <div class="card-photo">{trip.data.emoji}</div>
-              <div class="card-title">{trip.data.title}</div>
-              <div class="card-meta">
-                {trip.data.destination}
-                {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
-                {trip.data.budget && ` · ${trip.data.budget}`}
+  <div class="stats">
+    <div class="stat"><b>{trips.length}</b><span>번의 여행</span></div>
+    <div class="stat"><b>{destinationCount}</b><span>여행지</span></div>
+    {dDay !== null && (
+      <div class="stat"><b>D-{dDay}</b><span>{nextUpcoming!.data.title}까지</span></div>
+    )}
+  </div>
+
+  <div class="tabs-filter">
+    <input type="radio" name="tab" id="f-all" class="visually-hidden" checked />
+    <input type="radio" name="tab" id="f-upcoming" class="visually-hidden" />
+    <input type="radio" name="tab" id="f-candidate" class="visually-hidden" />
+    <input type="radio" name="tab" id="f-done" class="visually-hidden" />
+    <div class="tabs">
+      <label for="f-all" class="tab tab-all">전체</label>
+      <label for="f-upcoming" class="tab tab-upcoming">확정</label>
+      <label for="f-candidate" class="tab tab-candidate">후보</label>
+      <label for="f-done" class="tab tab-done">지난 여행</label>
+    </div>
+
+    <div class="lists">
+    {
+      sections.map(({ status, label, empty, className, badge, badgeLabel }) => {
+        const list = byStatus(status);
+        return (
+          <section class={className}>
+            <h2>{label}</h2>
+            {list.length === 0 && <p class="empty">{empty}</p>}
+            {list.length > 0 && (
+              <div class="grid">
+                {list.map((trip) => (
+                  <a class="card" href={`${import.meta.env.BASE_URL}trips/${trip.id}/`}>
+                    <div class="card-photo">
+                      <span class={`badge ${badge}`}>{badgeLabel}</span>
+                      {trip.data.emoji}
+                    </div>
+                    <div class="card-title">{trip.data.title}</div>
+                    <div class="card-meta">
+                      {trip.data.destination}
+                      {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
+                      {trip.data.budget && ` · ${trip.data.budget}`}
+                    </div>
+                    {trip.data.tags.length > 0 && (
+                      <div class="tags">
+                        {trip.data.tags.map((tag) => (
+                          <span class="tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </a>
+                ))}
               </div>
-              {trip.data.tags.length > 0 && (
-                <div class="tags">
-                  {trip.data.tags.map((tag) => (
-                    <span class="tag">{tag}</span>
-                  ))}
-                </div>
-              )}
-            </a>
-          ))}
-        </section>
-      );
-    })
-  }
+            )}
+          </section>
+        );
+      })
+    }
+    </div>
+  </div>
 </Layout>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 16px;
+  }
+
+  .stat b {
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .stat span {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .tabs-filter {
+    margin-top: 28px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 26px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .tab {
+    display: inline-block;
+    cursor: pointer;
+    padding-bottom: 12px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    color: var(--ink);
+  }
+
+  #f-all:checked ~ .tabs .tab-all,
+  #f-upcoming:checked ~ .tabs .tab-upcoming,
+  #f-candidate:checked ~ .tabs .tab-candidate,
+  #f-done:checked ~ .tabs .tab-done {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  #f-all:focus-visible ~ .tabs .tab-all,
+  #f-upcoming:focus-visible ~ .tabs .tab-upcoming,
+  #f-candidate:focus-visible ~ .tabs .tab-candidate,
+  #f-done:focus-visible ~ .tabs .tab-done {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  .lists {
+    margin-top: 12px;
+  }
+
+  #f-upcoming:checked ~ .lists .section-candidate,
+  #f-upcoming:checked ~ .lists .section-done,
+  #f-candidate:checked ~ .lists .section-upcoming,
+  #f-candidate:checked ~ .lists .section-done,
+  #f-done:checked ~ .lists .section-upcoming,
+  #f-done:checked ~ .lists .section-candidate {
+    display: none;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 26px 20px;
+  }
+
+  .card-photo .badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
