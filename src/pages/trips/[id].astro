@@ -18,6 +18,7 @@ const checklists = allChecklists.filter((c) => c.data.trip.id === trip.id);
 
 const statusLabel = { upcoming: "확정", candidate: "후보", done: "다녀옴" }[trip.data.status];
 const badgeClass = { upcoming: "badge-upcoming", candidate: "badge-candidate", done: "badge-done" }[trip.data.status];
+const isDone = trip.data.status === "done";
 
 const dateRange = (start?: Date, end?: Date) => {
   if (!start) return null;
@@ -55,6 +56,59 @@ const dateRange = (start?: Date, end?: Date) => {
   }
 
   {
+    /* 다녀온 여행은 계획 정보보다 사진이 먼저 보이도록 갤러리를 상단에 배치 */
+    isDone && trip.data.photos.length > 0 && (
+      <div class="gallery">
+        {trip.data.photos.map((p) => (
+          <figure class="gallery-item">
+            <img
+              src={`${import.meta.env.BASE_URL}photos/${trip.id}/${p.src}`}
+              alt={p.caption ?? `${trip.data.title} 사진`}
+              loading="lazy"
+            />
+            {p.caption && <figcaption>{p.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    (trip.data.flight || trip.data.lodging) && (
+      <div class="info-cards">
+        {trip.data.flight && (
+          <div class="info-card">
+            <span class="info-icon">✈️</span>
+            <div>
+              <div class="info-title">{trip.data.flight.title}</div>
+              {trip.data.flight.detail && <div class="info-detail">{trip.data.flight.detail}</div>}
+              {trip.data.flight.link && (
+                <a class="info-link" href={trip.data.flight.link} target="_blank" rel="noopener noreferrer">
+                  예약 보기 ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+        {trip.data.lodging && (
+          <div class="info-card">
+            <span class="info-icon">🏨</span>
+            <div>
+              <div class="info-title">{trip.data.lodging.title}</div>
+              {trip.data.lodging.detail && <div class="info-detail">{trip.data.lodging.detail}</div>}
+              {trip.data.lodging.link && (
+                <a class="info-link" href={trip.data.lodging.link} target="_blank" rel="noopener noreferrer">
+                  위치 보기 ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  {
     checklists.length > 0 && (
       <div class="checklist-links">
         {checklists.map((c) => (
@@ -78,5 +132,69 @@ const dateRange = (start?: Date, end?: Date) => {
     box-shadow: var(--shadow);
     margin-top: 12px;
     display: block;
+  }
+
+  /* ---------- info cards (항공/숙소) ---------- */
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 22px 0;
+  }
+
+  .info-card {
+    display: flex;
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: var(--surface);
+  }
+
+  .info-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .info-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .info-detail {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .info-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ---------- photo gallery (다녀온 여행) ---------- */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 22px 0;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: block;
+  }
+
+  .gallery-item figcaption {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
   }
 </style>

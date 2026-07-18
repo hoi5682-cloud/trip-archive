@@ -1,6 +1,17 @@
 import { defineCollection, reference, z } from "astro:content";
 import { glob } from "astro/loaders";
 
+const infoCard = z.object({
+  title: z.string(),
+  detail: z.string().optional(),
+  link: z.string().optional(),
+});
+
+const photo = z.object({
+  src: z.string(),
+  caption: z.string().optional(),
+});
+
 const trips = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/trips" }),
   schema: z.object({
@@ -14,6 +25,9 @@ const trips = defineCollection({
     cover: z.string().optional(),
     budget: z.string().optional(),
     tags: z.array(z.string()).default([]),
+    flight: infoCard.optional(),
+    lodging: infoCard.optional(),
+    photos: z.array(photo).default([]),
   }),
 });
 
