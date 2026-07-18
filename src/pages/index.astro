@@ -27,8 +27,8 @@ const dateRange = (start?: Date, end?: Date) => {
 ---
 
 <Layout title="홈">
-  <h1>우리 여행 아카이브</h1>
-  <p class="card-meta">계획하고, 다니고, 기록하는 우리 둘의 여행 보드.</p>
+  <h1>우리 여행 이야기</h1>
+  <p class="tagline">계획하고, 다니고, 기록하는 우리 둘의 스크랩북 ✂️</p>
 
   {
     sections.map(({ status, label, empty }) => {
@@ -39,9 +39,8 @@ const dateRange = (start?: Date, end?: Date) => {
           {list.length === 0 && <p class="empty">{empty}</p>}
           {list.map((trip) => (
             <a class="card" href={`${import.meta.env.BASE_URL}trips/${trip.id}/`}>
-              <div class="card-title">
-                {trip.data.emoji} {trip.data.title}
-              </div>
+              <div class="card-photo">{trip.data.emoji}</div>
+              <div class="card-title">{trip.data.title}</div>
               <div class="card-meta">
                 {trip.data.destination}
                 {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
