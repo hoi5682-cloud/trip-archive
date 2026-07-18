@@ -1,0 +1,59 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const trips = await getCollection("trips");
+  return trips.map((trip) => ({
+    params: { id: trip.id },
+    props: { trip },
+  }));
+}
+
+const { trip } = Astro.props;
+const { Content } = await render(trip);
+
+const allChecklists = await getCollection("checklists");
+const checklists = allChecklists.filter((c) => c.data.trip.id === trip.id);
+
+const statusLabel = { upcoming: "예정", candidate: "후보", done: "다녀옴" }[trip.data.status];
+
+const dateRange = (start?: Date, end?: Date) => {
+  if (!start) return null;
+  const fmt = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  return end ? `${fmt(start)} - ${fmt(end)}` : fmt(start);
+};
+---
+
+<Layout title={trip.data.title} description={trip.data.summary}>
+  <a class="back-link" href={import.meta.env.BASE_URL}>&larr; 전체 여행으로</a>
+  <h1>{trip.data.emoji} {trip.data.title}</h1>
+  <p class="card-meta">
+    [{statusLabel}] {trip.data.destination}
+    {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
+    {trip.data.budget && ` · ${trip.data.budget}`}
+  </p>
+  {
+    trip.data.tags.length > 0 && (
+      <div class="tags">
+        {trip.data.tags.map((tag) => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    checklists.length > 0 && (
+      <div class="checklist-links">
+        {checklists.map((c) => (
+          <a href={`${import.meta.env.BASE_URL}checklists/${c.id}/`}>📋 {c.data.title}</a>
+        ))}
+      </div>
+    )
+  }
+
+  <article class="body">
+    <Content />
+  </article>
+</Layout>

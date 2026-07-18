@@ -1,0 +1,63 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+
+const trips = await getCollection("trips");
+
+const byStatus = (status: "upcoming" | "candidate" | "done") =>
+  trips
+    .filter((t) => t.data.status === status)
+    .sort((a, b) => {
+      const ad = a.data.startDate?.getTime() ?? 0;
+      const bd = b.data.startDate?.getTime() ?? 0;
+      return status === "done" ? bd - ad : ad - bd;
+    });
+
+const sections = [
+  { status: "upcoming" as const, label: "예정 여행", empty: "아직 계획 중인 여행이 없어요." },
+  { status: "candidate" as const, label: "후보 여행", empty: "검토 중인 여행지가 없어요." },
+  { status: "done" as const, label: "다녀온 기록", empty: "아직 기록된 여행이 없어요." },
+];
+
+const dateRange = (start?: Date, end?: Date) => {
+  if (!start) return null;
+  const fmt = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return end ? `${fmt(start)} - ${fmt(end)}` : fmt(start);
+};
+---
+
+<Layout title="홈">
+  <h1>우리 여행 아카이브</h1>
+  <p class="card-meta">계획하고, 다니고, 기록하는 우리 둘의 여행 보드.</p>
+
+  {
+    sections.map(({ status, label, empty }) => {
+      const list = byStatus(status);
+      return (
+        <section>
+          <h2>{label}</h2>
+          {list.length === 0 && <p class="empty">{empty}</p>}
+          {list.map((trip) => (
+            <a class="card" href={`${import.meta.env.BASE_URL}trips/${trip.id}/`}>
+              <div class="card-title">
+                {trip.data.emoji} {trip.data.title}
+              </div>
+              <div class="card-meta">
+                {trip.data.destination}
+                {dateRange(trip.data.startDate, trip.data.endDate) && ` · ${dateRange(trip.data.startDate, trip.data.endDate)}`}
+                {trip.data.budget && ` · ${trip.data.budget}`}
+              </div>
+              {trip.data.tags.length > 0 && (
+                <div class="tags">
+                  {trip.data.tags.map((tag) => (
+                    <span class="tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </a>
+          ))}
+        </section>
+      );
+    })
+  }
+</Layout>

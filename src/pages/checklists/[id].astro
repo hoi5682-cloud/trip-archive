@@ -1,0 +1,26 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const checklists = await getCollection("checklists");
+  return checklists.map((checklist) => ({
+    params: { id: checklist.id },
+    props: { checklist },
+  }));
+}
+
+const { checklist } = Astro.props;
+const { Content } = await render(checklist);
+const trip = await getEntry(checklist.data.trip);
+---
+
+<Layout title={checklist.data.title} description={checklist.data.summary}>
+  {trip && <a class="back-link" href={`${import.meta.env.BASE_URL}trips/${trip.id}/`}>&larr; {trip.data.title}로</a>}
+  <h1>📋 {checklist.data.title}</h1>
+  {checklist.data.summary && <p class="card-meta">{checklist.data.summary}</p>}
+
+  <article class="body">
+    <Content />
+  </article>
+</Layout>
