@@ -2,10 +2,18 @@
 title: 시드니
 destination: 호주 시드니
 status: upcoming
-summary: 18개월 아기와 함께 떠나는 첫 가족 여행. 날짜와 세부 일정은 협의 중.
+startDate: 2027-05-12
+endDate: 2027-05-22
+summary: 18개월 아기와 함께 떠나는 첫 가족 여행. 2027년 5월 12일~22일 (10박 11일).
 emoji: 🐨
 cover: sydney.svg
 tags: [아기동반, 첫가족여행]
+flight:
+  title: 대한항공 / 아시아나
+  detail: 대한항공 또는 아시아나만 이용 (직항 우선, 편명·시간 미정)
+lodging:
+  title: Zara Tower
+  detail: 시드니 Zara Tower 숙소
 ---
 
 ## 동선 / 일정
@@ -48,6 +56,8 @@ tags: [아기동반, 첫가족여행]
 
 ## 메모
 
-- 항공편 · 숙소: 아직 미정. 정해지면 frontmatter의 `flight` / `lodging`에 채워넣기
+- 날짜: 2027년 5월 12일 ~ 22일 (10박 11일) 확정
+- 항공편: 대한항공 또는 아시아나만 이용 (편명·시간 미정 → 정해지면 frontmatter `flight.detail`에 반영)
+- 숙소: Zara Tower
 - 아기 관련 특이사항 (유아 요금, 카시트/바시넷 등): 미정
 - 여행 중/후에 자유롭게 기록.
