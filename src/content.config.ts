@@ -12,6 +12,37 @@ const photo = z.object({
   caption: z.string().optional(),
 });
 
+const sheetLinks = z.object({
+  itinerary: z.string().url().optional(),
+  budget: z.string().url().optional(),
+  checklist: z.string().url().optional(),
+});
+
+const itineraryItem = z.object({
+  time: z.string().optional(),
+  title: z.string(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+});
+
+const itineraryDay = z.object({
+  day: z.number(),
+  items: z.array(itineraryItem),
+});
+
+const budgetItem = z.object({
+  category: z.string().optional(),
+  label: z.string(),
+  planned: z.number().optional(),
+  actual: z.number().optional(),
+});
+
+const candidate = z.object({
+  name: z.string(),
+  note: z.string().optional(),
+  link: z.string().optional(),
+});
+
 const trips = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/trips" }),
   schema: z.object({
@@ -28,6 +59,11 @@ const trips = defineCollection({
     flight: infoCard.optional(),
     lodging: infoCard.optional(),
     photos: z.array(photo).default([]),
+    sheet: sheetLinks.optional(),
+    itinerary: z.array(itineraryDay).default([]),
+    budgetItems: z.array(budgetItem).default([]),
+    places: z.array(candidate).default([]),
+    foods: z.array(candidate).default([]),
   }),
 });
 

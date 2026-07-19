@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import TripDashboard from "../../components/TripDashboard.astro";
+import TripMap from "../../components/TripMap.astro";
 
 export async function getStaticPaths() {
   const trips = await getCollection("trips");
@@ -15,6 +17,12 @@ const { Content } = await render(trip);
 
 const allChecklists = await getCollection("checklists");
 const checklists = allChecklists.filter((c) => c.data.trip.id === trip.id);
+const checklistRenders = await Promise.all(
+  checklists.map(async (c) => {
+    const { Content: ChecklistContent } = await render(c);
+    return { id: c.id, title: c.data.title, Content: ChecklistContent };
+  })
+);
 
 const statusLabel = { upcoming: "확정", candidate: "후보", done: "다녀옴" }[trip.data.status];
 const badgeClass = { upcoming: "badge-upcoming", candidate: "badge-candidate", done: "badge-done" }[trip.data.status];
@@ -25,6 +33,21 @@ const dateRange = (start?: Date, end?: Date) => {
   const fmt = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
   return end ? `${fmt(start)} - ${fmt(end)}` : fmt(start);
 };
+
+const itineraryDays = trip.data.itinerary;
+const summaryStops = itineraryDays.flatMap((d) => d.items.filter((it) => it.lat != null && it.lng != null));
+const dayTabCss = itineraryDays
+  .map(
+    (d) => `
+    #day-${d.day}:checked ~ .day-panels .day-panel-${d.day} { display: block; }
+    #day-${d.day}:checked ~ .tabs .tab-${d.day} { color: var(--ink); border-bottom-color: var(--ink); }
+  `
+  )
+  .join("\n");
+
+const money = (n: number) => n.toLocaleString("ko-KR") + "원";
+const budgetTotalPlanned = trip.data.budgetItems.reduce((sum, b) => sum + (b.planned ?? 0), 0);
+const budgetTotalActual = trip.data.budgetItems.reduce((sum, b) => sum + (b.actual ?? 0), 0);
 ---
 
 <Layout title={trip.data.title} description={trip.data.summary}>
@@ -54,6 +77,8 @@ const dateRange = (start?: Date, end?: Date) => {
       </div>
     )
   }
+
+  <TripDashboard sheet={trip.data.sheet} />
 
   {
     /* 다녀온 여행은 계획 정보보다 사진이 먼저 보이도록 갤러리를 상단에 배치 */
@@ -108,19 +133,137 @@ const dateRange = (start?: Date, end?: Date) => {
     )
   }
 
+  <div class="detail-grid">
+    <div class="detail-main">
+      {
+        itineraryDays.length > 0 && (
+          <section class="itinerary">
+            <h2>동선 / 일정</h2>
+            {
+              summaryStops.length > 0 && (
+                <div class="itinerary-summary">
+                  {summaryStops.map((s, i) => (
+                    <>
+                      {i > 0 && <span class="summary-arrow">→</span>}
+                      <span class="summary-stop">{s.title}</span>
+                    </>
+                  ))}
+                </div>
+              )
+            }
+            <div class="day-tabs">
+              {itineraryDays.map((d, i) => (
+                <input type="radio" name="day" id={`day-${d.day}`} class="visually-hidden" checked={i === 0} />
+              ))}
+              <div class="tabs">
+                {itineraryDays.map((d) => (
+                  <label for={`day-${d.day}`} class={`tab tab-${d.day}`}>Day {d.day}</label>
+                ))}
+              </div>
+              <div class="day-panels">
+                {itineraryDays.map((d) => (
+                  <ul class={`day-panel day-panel-${d.day}`}>
+                    {d.items.map((it) => (
+                      <li>
+                        {it.time && <span class="it-time">{it.time}</span>}
+                        <span class="it-title">{it.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+              <style set:html={dayTabCss} />
+            </div>
+            <TripMap days={itineraryDays} />
+          </section>
+        )
+      }
+
+      <article class="body">
+        <Content />
+      </article>
+    </div>
+
+    <aside class="detail-sidebar">
+      {
+        checklistRenders.length > 0 && (
+          <details class="side-details">
+            <summary>준비물 체크리스트</summary>
+            {checklistRenders.map(({ id, title, Content: ChecklistContent }) => (
+              <div class="side-checklist">
+                <a class="side-checklist-link" href={`${import.meta.env.BASE_URL}checklists/${id}/`}>
+                  {title} · 전체보기 ↗
+                </a>
+                <article class="body side-checklist-body">
+                  <ChecklistContent />
+                </article>
+              </div>
+            ))}
+          </details>
+        )
+      }
+
+      <details class="side-details">
+        <summary>가볼곳 후보</summary>
+        {
+          trip.data.places.length > 0 ? (
+            <ul class="side-candidates">
+              {trip.data.places.map((p) => (
+                <li>
+                  <span class="cand-name">{p.name}</span>
+                  {p.note && <span class="cand-note">{p.note}</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="empty-note">아직 담아둔 곳이 없어요.</p>
+          )
+        }
+      </details>
+
+      <details class="side-details">
+        <summary>먹을곳 후보</summary>
+        {
+          trip.data.foods.length > 0 ? (
+            <ul class="side-candidates">
+              {trip.data.foods.map((f) => (
+                <li>
+                  <span class="cand-name">{f.name}</span>
+                  {f.note && <span class="cand-note">{f.note}</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="empty-note">아직 담아둔 곳이 없어요.</p>
+          )
+        }
+      </details>
+    </aside>
+  </div>
+
   {
-    checklists.length > 0 && (
-      <div class="checklist-links">
-        {checklists.map((c) => (
-          <a href={`${import.meta.env.BASE_URL}checklists/${c.id}/`}>📋 {c.data.title}</a>
+    trip.data.budgetItems.length > 0 && (
+      <section class="budget">
+        <h2>예산</h2>
+        <div class="budget-total">
+          합계 {money(budgetTotalPlanned)}
+          {budgetTotalActual > 0 && ` (실사용 ${money(budgetTotalActual)})`}
+        </div>
+        {trip.data.budgetItems.map((b) => (
+          <details class="budget-item">
+            <summary>
+              {b.category && <span class="budget-cat">{b.category}</span>}
+              <span class="budget-label">{b.label}</span>
+              <span class="budget-amount">{b.planned != null ? money(b.planned) : "미정"}</span>
+            </summary>
+            <div class="budget-detail">
+              예산: {b.planned != null ? money(b.planned) : "-"} · 실사용: {b.actual != null ? money(b.actual) : "-"}
+            </div>
+          </details>
         ))}
-      </div>
+      </section>
     )
   }
-
-  <article class="body">
-    <Content />
-  </article>
 </Layout>
 
 <style>
@@ -128,8 +271,8 @@ const dateRange = (start?: Date, end?: Date) => {
     width: 100%;
     aspect-ratio: 16 / 9;
     object-fit: cover;
-    border-radius: 16px;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
     margin-top: 12px;
     display: block;
   }
@@ -146,7 +289,7 @@ const dateRange = (start?: Date, end?: Date) => {
     display: flex;
     gap: 12px;
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     padding: 14px 16px;
     background: var(--surface);
   }
@@ -187,8 +330,8 @@ const dateRange = (start?: Date, end?: Date) => {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
     display: block;
   }
 
@@ -196,5 +339,234 @@ const dateRange = (start?: Date, end?: Date) => {
     font-size: 0.78rem;
     color: var(--muted);
     margin-top: 4px;
+  }
+
+  /* ---------- 동선 / 일정: Day 탭 ---------- */
+  .itinerary {
+    margin: 22px 0;
+  }
+
+  .itinerary-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 18px;
+    font-size: 0.85rem;
+  }
+
+  .summary-stop {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+
+  .summary-arrow {
+    color: var(--muted);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .day-tabs .tabs {
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .day-tabs .tab {
+    display: inline-block;
+    cursor: pointer;
+    padding-bottom: 10px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .day-tabs .tab:hover {
+    color: var(--ink);
+  }
+
+  .day-panels {
+    margin-top: 14px;
+  }
+
+  .day-panel {
+    display: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .day-panel li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+
+  .day-panel li:last-child {
+    border-bottom: none;
+  }
+
+  .it-time {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 40px;
+  }
+
+  .it-title {
+    flex: 1;
+  }
+
+  /* ---------- 2단 레이아웃 ---------- */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 860px) {
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detail-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 88px;
+  }
+
+  .side-details {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    background: var(--surface);
+  }
+
+  .side-details summary {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .side-details[open] summary {
+    margin-bottom: 10px;
+  }
+
+  .side-checklist-link {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .side-checklist-body {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .side-candidates {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .side-candidates li {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    font-size: 0.88rem;
+  }
+
+  .cand-note {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  .empty-note {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  /* ---------- 예산 아코디언 ---------- */
+  .budget {
+    margin: 30px 0;
+  }
+
+  .budget-total {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 10px 0 14px;
+  }
+
+  .budget-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+
+  .budget-item summary {
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 0.92rem;
+  }
+
+  .budget-cat {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--status-candidate-ink);
+    background: var(--status-candidate-bg);
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .budget-label {
+    flex: 1;
+    font-weight: 600;
+  }
+
+  .budget-amount {
+    font-weight: 700;
+  }
+
+  .budget-detail {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--muted);
   }
 </style>

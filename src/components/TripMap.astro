@@ -1,0 +1,94 @@
+---
+import "leaflet/dist/leaflet.css";
+
+interface Item {
+  time?: string;
+  title: string;
+  lat?: number;
+  lng?: number;
+}
+interface Day {
+  day: number;
+  items: Item[];
+}
+interface Props {
+  days: Day[];
+}
+
+const { days } = Astro.props;
+
+const mapDays = days.map((d) => ({
+  day: d.day,
+  points: d.items
+    .filter((it) => it.lat != null && it.lng != null)
+    .map((it) => ({ lat: it.lat, lng: it.lng, title: it.title })),
+}));
+
+const hasAnyPoints = mapDays.some((d) => d.points.length > 0);
+const daysJson = JSON.stringify(mapDays);
+---
+
+{
+  hasAnyPoints && (
+    <div id="trip-map" class="trip-map" data-days={daysJson} />
+  )
+}
+
+{
+  hasAnyPoints && (
+    <script>
+      import L from "leaflet";
+
+      const root = document.getElementById("trip-map");
+      if (root) {
+        const days = JSON.parse(root.dataset.days || "[]");
+        const map = L.map(root);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+          maxZoom: 19,
+        }).addTo(map);
+
+        let layer = null;
+
+        function renderDay(dayNum) {
+          const found = days.find((d) => d.day === dayNum);
+          const points = found ? found.points : [];
+          if (layer) layer.remove();
+          layer = L.layerGroup().addTo(map);
+          if (points.length === 0) {
+            map.setView([0, 0], 1);
+            return;
+          }
+          const latlngs = points.map((p) => [p.lat, p.lng]);
+          points.forEach((p) => {
+            L.marker([p.lat, p.lng]).addTo(layer).bindTooltip(p.title);
+          });
+          if (latlngs.length > 1) {
+            L.polyline(latlngs, { color: "#f15b57", weight: 3 }).addTo(layer);
+          }
+          map.fitBounds(latlngs, { padding: [24, 24] });
+        }
+
+        const radios = document.querySelectorAll('input[name="day"]');
+        let initialDay = days[0]?.day ?? 1;
+        radios.forEach((input) => {
+          if (input.checked) initialDay = Number(input.id.replace("day-", ""));
+          input.addEventListener("change", () => {
+            if (input.checked) renderDay(Number(input.id.replace("day-", "")));
+          });
+        });
+        renderDay(initialDay);
+      }
+    </script>
+  )
+}
+
+<style>
+  .trip-map {
+    height: 320px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    margin: 16px 0;
+    overflow: hidden;
+  }
+</style>
